@@ -292,6 +292,35 @@
                 height: 20px;
             }
         }
+
+        .retro-marquee-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 5px auto;
+            background: blue;
+            color: yellow;
+            text-transform: uppercase;
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .retro-marquee-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll-marquee 25s linear infinite;
+        }
+
+        @keyframes scroll-marquee {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(-100%, 0);
+            }
+        }
     </style>
 </head>
 
@@ -305,27 +334,23 @@
             <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmp0YTNya2kxM21oY25rMTlwcGo0bm50a3Q0MzB0cWYydXowMXJlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/BXjqytvu9bKzCUHdzz/giphy.gif"
                 width="60" height="60" alt="msn gif" style="vertical-align: middle; transform: scaleX(-1);">
         </h1>
-        <div style="text-align: center; margin-bottom: 5px;">
-            <marquee scrollamount="15" width="100%"
-                style="color: yellow; text-transform: uppercase; font-family: 'Courier New'; font-weight: bold; background: blue; max-width: 600px;">
-                <span style="display: inline-block; margin-right: 400px;">
-                    &rsaquo;&rsaquo;&rsaquo;Your Personal Digital Companion for the New
-                    Millennium&lsaquo;&lsaquo;&lsaquo;
-                </span>
-                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;No Dial-up
+        <div class="retro-marquee-container">
+            <div class="retro-marquee-content">
+                <span style="margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Your Personal Digital Companion for the New
+                    Millennium&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;No Dial-up
                     required!&lsaquo;&lsaquo;&lsaquo;</span>
-                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Cybernetically
+                <span style="margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Cybernetically
                     Enhanced!&lsaquo;&lsaquo;&lsaquo;</span>
-                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;100% Y2K
+                <span style="margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;100% Y2K
                     Compliant!&lsaquo;&lsaquo;&lsaquo;</span>
-                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Best viewed in
-                    Netscape
-                    Navigator 4.0&lsaquo;&lsaquo;&lsaquo;</span>
-                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Welcome to the
-                    Information Superhighway!&lsaquo;&lsaquo;&lsaquo;</span>
-                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Download more RAM
+                <span style="margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Best viewed in Netscape Navigator
+                    4.0&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Welcome to the Information
+                    Superhighway!&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Download more RAM
                     today!&lsaquo;&lsaquo;&lsaquo;</span>
-            </marquee>
+            </div>
         </div>
 
         <div id="chat-container"></div>
@@ -362,6 +387,46 @@
         const modelSelect = document.getElementById('model-select');
 
         let conversationHistory = [];
+
+        const OLLAMA_TAGS_URL = 'https://ollama.nairdrie.com/api/tags';
+
+        // Function to fetch and populate models
+        async function fetchModels() {
+            try {
+                // We use credentials: 'include' just like your chat fetch to handle Cloudflare
+                const response = await fetch(OLLAMA_TAGS_URL, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+
+                // Clear the existing hardcoded options
+                modelSelect.innerHTML = '';
+
+                // Check if we got models back
+                if (data.models && data.models.length > 0) {
+                    data.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.name;
+                        option.textContent = model.name;
+                        modelSelect.appendChild(option);
+                    });
+                } else {
+                    modelSelect.innerHTML = '<option value="">No models found</option>';
+                }
+            } catch (error) {
+                console.error('Error fetching models from Ollama:', error);
+                // Fallback in case the fetch fails
+                modelSelect.innerHTML = '<option value="qwen2.5-coder:7b">Awaiting authentication...</option>';
+            }
+        }
+
+        // Call the function immediately when the script runs
+        fetchModels();
 
         // Load history from local storage
         try {
@@ -552,6 +617,8 @@
                                 clearInterval(authInterval);
                                 assistantDiv.innerHTML = `<span style="color: #0f0">Authentication window closed.</span> Please send your message again.`;
                                 sendBtn.disabled = false;
+
+                                fetchModels();
                             }
                         }, 500);
                     });
