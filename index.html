@@ -160,6 +160,27 @@
             border-color: gray;
         }
 
+        #clear-btn {
+            background: silver;
+            border: 4px outset #fff;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #clear-btn:active {
+            border-style: inset;
+        }
+
+        #clear-btn img {
+            width: 32px;
+            height: 32px;
+            image-rendering: pixelated;
+            /* Give it that crisp 90s feel */
+        }
+
         .typing-dots::after {
             content: '';
             animation: dots 1.5s steps(4, end) infinite;
@@ -199,6 +220,78 @@
                 opacity: 0;
             }
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 40px;
+                margin-top: 5px;
+            }
+
+            h1 img {
+                width: 30px;
+                height: 30px;
+            }
+
+            .inner {
+                height: calc(100vh - 10px);
+                padding: 0 5px;
+            }
+
+            #chat-container {
+                padding: 10px;
+                border-width: 4px;
+            }
+
+            .user-message {
+                font-size: 14px;
+            }
+
+            .assistant-message {
+                font-size: 13px;
+            }
+
+            .message {
+                max-width: 95%;
+                padding: 8px;
+            }
+
+            #input-container {
+                flex-direction: row;
+                padding: 6px;
+                gap: 5px;
+                border-width: 4px;
+            }
+
+            #model-select,
+            #prompt-input {
+                font-size: 12px;
+                padding: 6px 4px;
+                border-width: 2px;
+            }
+
+            /* Hide the model select on absolute smallest screens if needed, 
+               but keep it if it fits. Might have to truncate text. */
+            #model-select {
+                max-width: 80px;
+            }
+
+            #send-btn {
+                font-size: 12px;
+                padding: 6px 10px;
+                border-width: 2px;
+            }
+
+            #clear-btn {
+                padding: 3px;
+                border-width: 2px;
+            }
+
+            #clear-btn img {
+                width: 20px;
+                height: 20px;
+            }
+        }
     </style>
 </head>
 
@@ -208,14 +301,31 @@
         <h1>
             <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmp0YTNya2kxM21oY25rMTlwcGo0bm50a3Q0MzB0cWYydXowMXJlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/BXjqytvu9bKzCUHdzz/giphy.gif"
                 width="60" height="60" alt="msn gif" style="vertical-align: middle;">
-            WELCOME TO CYBERPAL 9000
+            CYBERPAL 9000
             <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmp0YTNya2kxM21oY25rMTlwcGo0bm50a3Q0MzB0cWYydXowMXJlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/BXjqytvu9bKzCUHdzz/giphy.gif"
                 width="60" height="60" alt="msn gif" style="vertical-align: middle; transform: scaleX(-1);">
         </h1>
         <div style="text-align: center; margin-bottom: 5px;">
-            <marquee scrollamount="5" width="300"
-                style="color: yellow; font-family: 'Courier New'; font-weight: bold; background: blue;">>>> UNDER
-                CONSTRUCTION <<< </marquee>
+            <marquee scrollamount="15" width="100%"
+                style="color: yellow; text-transform: uppercase; font-family: 'Courier New'; font-weight: bold; background: blue; max-width: 600px;">
+                <span style="display: inline-block; margin-right: 400px;">
+                    &rsaquo;&rsaquo;&rsaquo;Your Personal Digital Companion for the New
+                    Millennium&lsaquo;&lsaquo;&lsaquo;
+                </span>
+                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;No Dial-up
+                    required!&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Cybernetically
+                    Enhanced!&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;100% Y2K
+                    Compliant!&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Best viewed in
+                    Netscape
+                    Navigator 4.0&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Welcome to the
+                    Information Superhighway!&lsaquo;&lsaquo;&lsaquo;</span>
+                <span style="display: inline-block; margin-right: 400px;">&rsaquo;&rsaquo;&rsaquo;Download more RAM
+                    today!&lsaquo;&lsaquo;&lsaquo;</span>
+            </marquee>
         </div>
 
         <div id="chat-container"></div>
@@ -226,6 +336,10 @@
             </select>
             <input type="text" id="prompt-input" placeholder="Type here..." autocomplete="off">
             <button id="send-btn">Send!</button>
+            <button id="clear-btn" title="Empty Trash">
+                <!-- A classic 90s Macintosh style trash icon -->
+                <img src="assets/Bin_Full95.webp" alt="Trash">
+            </button>
         </div>
         <div style="margin-top: 10px; font-size: 14px; font-family: 'Times New Roman'; color: cyan;">
             <center>
@@ -244,9 +358,32 @@
         const chatContainer = document.getElementById('chat-container');
         const promptInput = document.getElementById('prompt-input');
         const sendBtn = document.getElementById('send-btn');
+        const clearBtn = document.getElementById('clear-btn');
         const modelSelect = document.getElementById('model-select');
 
         let conversationHistory = [];
+
+        // Load history from local storage
+        try {
+            const savedHistory = localStorage.getItem('cyberpal_history');
+            if (savedHistory) {
+                conversationHistory = JSON.parse(savedHistory);
+                // initial render
+                conversationHistory.forEach(msg => {
+                    addMessage(msg.role, msg.content);
+                });
+            }
+        } catch (e) {
+            console.error("Failed to load history", e);
+        }
+
+        function saveHistory() {
+            try {
+                localStorage.setItem('cyberpal_history', JSON.stringify(conversationHistory));
+            } catch (e) {
+                console.error("Failed to save history", e);
+            }
+        }
 
         function addMessage(role, content) {
             const div = document.createElement('div');
@@ -264,6 +401,7 @@
             // Add user message to UI and history
             addMessage('user', text);
             conversationHistory.push({ role: 'user', content: text });
+            saveHistory();
 
             promptInput.value = '';
             sendBtn.disabled = true;
@@ -300,13 +438,24 @@
                 }
             };
 
-            const enqueueChars = (text) => {
+            const enqueueChars = (text, onComplete = null) => {
                 if (!streamStarted) {
                     streamStarted = true;
                     assistantDiv.classList.remove('typing-dots');
                     assistantDiv.classList.add('blinking-cursor');
                 }
                 charQueue.push(...text.split(''));
+
+                // If a callback is provided, we need to poll until charQueue is empty
+                if (onComplete) {
+                    const checkQueue = setInterval(() => {
+                        if (charQueue.length === 0 && !isTyping) {
+                            clearInterval(checkQueue);
+                            onComplete();
+                        }
+                    }, 100);
+                }
+
                 if (!isTyping) {
                     isTyping = true;
                     requestAnimationFrame(typeNextChar);
@@ -360,6 +509,7 @@
 
                 // Save full assistant response to history
                 conversationHistory.push({ role: 'assistant', content: finalResponse });
+                saveHistory();
 
             } catch (error) {
                 console.error('Error fetching from Ollama:', error);
@@ -367,26 +517,44 @@
 
                 // If it's a TypeError, it's highly likely Cloudflare Access blocked the CORS redirect with a 302 to the login page
                 if (error.name === 'TypeError') {
-                    // Calculate center position for popup
-                    const w = 450;
-                    const h = 600;
-                    const left = (screen.width / 2) - (w / 2);
-                    const top = (screen.height / 2) - (h / 2);
+                    // Type out the error message like a 90s terminal
+                    const authMessage = "ACCESS DENIED...\nWait, checking authentication window...";
 
-                    assistantDiv.innerHTML = `<span style="color: yellow">Cloudflare Access blocked the connection!</span><br>Wait, checking authentication window...`;
+                    // Reset streaming state for the error message
+                    streamStarted = false;
+                    charQueue = [];
+                    isTyping = false;
+                    displayedResponse = '';
+                    assistantDiv.textContent = '';
+                    // Need to reset the flexbox behavior from typing dots
+                    assistantDiv.classList.remove('typing-dots');
 
-                    // Open popup for login
-                    const loginWindow = window.open('https://ollama.nairdrie.com/', 'CloudflareLogin', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+                    enqueueChars(authMessage, () => {
+                        // This callback fires once the text finishes typing
 
-                    // Poll window state
-                    const authInterval = setInterval(() => {
-                        // User closed the window!
-                        if (loginWindow && loginWindow.closed) {
-                            clearInterval(authInterval);
-                            assistantDiv.innerHTML = `<span style="color: #0f0">Authentication window closed!</span> Please send your message again.`;
-                            sendBtn.disabled = false;
-                        }
-                    }, 500);
+                        // Calculate center position for popup
+                        const w = 450;
+                        const h = 600;
+                        const left = (screen.width / 2) - (w / 2);
+                        const top = (screen.height / 2) - (h / 2);
+
+                        // Turn "ACCESS DENIED" red to match the aesthetic after typing finishes
+                        assistantDiv.innerHTML = `<span style="color: red; font-weight: bold;">ACCESS DENIED...</span><br>Wait, checking authentication window...`;
+                        assistantDiv.classList.remove('blinking-cursor');
+
+                        // Open popup for login
+                        const loginWindow = window.open('https://ollama.nairdrie.com/', 'CloudflareLogin', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+
+                        // Poll window state
+                        const authInterval = setInterval(() => {
+                            // User closed the window!
+                            if (loginWindow && loginWindow.closed) {
+                                clearInterval(authInterval);
+                                assistantDiv.innerHTML = `<span style="color: #0f0">Authentication window closed.</span> Please send your message again.`;
+                                sendBtn.disabled = false;
+                            }
+                        }, 500);
+                    });
 
                     // Prevent finally block from re-enabling the button too early
                     return;
@@ -403,6 +571,17 @@
         sendBtn.addEventListener('click', sendMessage);
         promptInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
+        });
+
+        clearBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to empty the Recycle Bin? All chats will be lost in the void!")) {
+                // Clear state
+                conversationHistory = [];
+                // Clear storage
+                localStorage.removeItem('cyberpal_history');
+                // Clear UI
+                chatContainer.innerHTML = '';
+            }
         });
 
         // 90s Background Cycler & Space Invaders Logic
