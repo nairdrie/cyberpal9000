@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERPAL 9000</title>
+    <style>
+        body {
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            margin: 0;
+            padding: 10px;
+            background-color: #000000;
+            background-image: url('https://web.archive.org/web/19961219003053im_/http://www.pepsi.com/images/greenmesh.gif');
+            color: #00FF00;
+            transition: background-image 0.2s;
+        }
+
+        #game-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .inner {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 20px);
+            box-sizing: border-box;
+            text-align: center;
+            transition: opacity 0.3s;
+        }
+
+        .inner.transparent {
+            opacity: 0.15;
+            transition: opacity 0.3s;
+        }
+
+        h1 {
+            color: transparent;
+            font-size: 52px;
+            text-align: center;
+            font-family: "Impact", "Arial Black", sans-serif;
+            margin: 10px 0 15px 0;
+            background: linear-gradient(to bottom, #ff0000, #ffff00, #ff0000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-stroke: 2px #000;
+            filter: drop-shadow(4px 4px 0px #00f);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #000080;
+            /* Navy */
+            padding: 15px;
+            border: 8px ridge #cecece;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 0;
+            max-width: 85%;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 4px outset #ccc;
+        }
+
+        .user-message {
+            background: #008080;
+            /* Teal */
+            color: yellow;
+            align-self: flex-end;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .assistant-message {
+            background: #800080;
+            /* Purple */
+            color: #00FF00;
+            /* Neon green */
+            align-self: flex-start;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 16px;
+            border-color: #00FF00;
+        }
+
+        #input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            background-color: silver;
+            padding: 10px;
+            border: 6px ridge gray;
+        }
+
+        #model-select,
+        #prompt-input {
+            padding: 10px 5px;
+            border: 3px inset #fff;
+            font-size: 16px;
+            background: black;
+            color: #00ff00;
+            font-family: "Courier New", Courier, monospace;
+            outline: none;
+        }
+
+        #model-select {
+            cursor: pointer;
+        }
+
+        #prompt-input {
+            flex: 1;
+        }
+
+        #prompt-input:focus {
+            background: #000080;
+            color: yellow;
+        }
+
+        #send-btn {
+            padding: 10px 20px;
+            background: silver;
+            color: black;
+            border: 4px outset #fff;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            font-family: "Times New Roman", Times, serif;
+            text-transform: uppercase;
+        }
+
+        #send-btn:active {
+            border-style: inset;
+        }
+
+        #send-btn:disabled {
+            background: gray;
+            color: silver;
+            border-color: gray;
+        }
+
+        .typing-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+
+            0%,
+            20% {
+                content: '';
+            }
+
+            40% {
+                content: '.';
+            }
+
+            60% {
+                content: '..';
+            }
+
+            80%,
+            100% {
+                content: '...';
+            }
+        }
+
+        .blinking-cursor::after {
+            content: '█';
+            animation: blink 0.5s step-start infinite;
+            margin-left: 4px;
+            vertical-align: baseline;
+            color: #00FF00;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="game-canvas"></canvas>
+    <div class="inner" id="inner-chat">
+        <h1>
+            <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmp0YTNya2kxM21oY25rMTlwcGo0bm50a3Q0MzB0cWYydXowMXJlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/BXjqytvu9bKzCUHdzz/giphy.gif"
+                width="60" height="60" alt="msn gif" style="vertical-align: middle;">
+            WELCOME TO CYBERPAL 9000
+            <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmp0YTNya2kxM21oY25rMTlwcGo0bm50a3Q0MzB0cWYydXowMXJlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/BXjqytvu9bKzCUHdzz/giphy.gif"
+                width="60" height="60" alt="msn gif" style="vertical-align: middle; transform: scaleX(-1);">
+        </h1>
+        <div style="text-align: center; margin-bottom: 5px;">
+            <marquee scrollamount="5" width="300"
+                style="color: yellow; font-family: 'Courier New'; font-weight: bold; background: blue;">>>> UNDER
+                CONSTRUCTION <<< </marquee>
+        </div>
+
+        <div id="chat-container"></div>
+        <div id="input-container">
+            <select id="model-select">
+                <option value="qwen2.5-coder:7b" selected>qwen2.5-coder:7b</option>
+                <option value="qwen2.5-coder:32b">qwen2.5-coder:32b</option>
+            </select>
+            <input type="text" id="prompt-input" placeholder="Type here..." autocomplete="off">
+            <button id="send-btn">Send!</button>
+        </div>
+        <div style="margin-top: 10px; font-size: 14px; font-family: 'Times New Roman'; color: cyan;">
+            <center>
+                <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmp0YTNya2kxM21oY25rMTlwcGo0bm50a3Q0MzB0cWYydXowMXJlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/BXjqytvu9bKzCUHdzz/giphy.gif"
+                    width="30" height="30" alt="msn gif" style="vertical-align: middle;">
+                <b>You are visitor #008492</b>
+                <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYmp0YTNya2kxM21oY25rMTlwcGo0bm50a3Q0MzB0cWYydXowMXJlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/BXjqytvu9bKzCUHdzz/giphy.gif"
+                    width="30" height="30" alt="msn gif" style="vertical-align: middle;">
+            </center>
+        </div>
+    </div>
+
+    <script>
+        const OLLAMA_URL = 'https://ollama.nairdrie.com/api/chat';
+
+        const chatContainer = document.getElementById('chat-container');
+        const promptInput = document.getElementById('prompt-input');
+        const sendBtn = document.getElementById('send-btn');
+        const modelSelect = document.getElementById('model-select');
+
+        let conversationHistory = [];
+
+        function addMessage(role, content) {
+            const div = document.createElement('div');
+            div.classList.add('message', `${role}-message`);
+            div.textContent = content;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return div;
+        }
+
+        async function sendMessage() {
+            const text = promptInput.value.trim();
+            if (!text) return;
+
+            // Add user message to UI and history
+            addMessage('user', text);
+            conversationHistory.push({ role: 'user', content: text });
+
+            promptInput.value = '';
+            sendBtn.disabled = true;
+
+            // Create an empty assistant message div for inline streaming
+            const assistantDiv = addMessage('assistant', '');
+            assistantDiv.classList.add('typing-dots');
+
+            let finalResponse = '';
+            let displayedResponse = '';
+            let streamStarted = false;
+            let charQueue = [];
+            let isTyping = false;
+            let doneStreaming = false;
+
+            const typeNextChar = () => {
+                if (charQueue.length > 0) {
+                    const charsToTake = Math.max(1, Math.floor(charQueue.length / 15));
+                    displayedResponse += charQueue.splice(0, charsToTake).join('');
+                    assistantDiv.textContent = displayedResponse;
+
+                    // Only auto-scroll if the user is currently at or near the bottom
+                    const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 50;
+                    if (isAtBottom) {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+
+                    requestAnimationFrame(typeNextChar);
+                } else {
+                    isTyping = false;
+                    if (doneStreaming) {
+                        assistantDiv.classList.remove('blinking-cursor');
+                    }
+                }
+            };
+
+            const enqueueChars = (text) => {
+                if (!streamStarted) {
+                    streamStarted = true;
+                    assistantDiv.classList.remove('typing-dots');
+                    assistantDiv.classList.add('blinking-cursor');
+                }
+                charQueue.push(...text.split(''));
+                if (!isTyping) {
+                    isTyping = true;
+                    requestAnimationFrame(typeNextChar);
+                }
+            };
+
+            try {
+                const response = await fetch(OLLAMA_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        model: modelSelect.value,
+                        messages: conversationHistory,
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    // Decode the stream and append to buffer
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+
+                    // Keep the last incomplete line in the buffer
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            const data = JSON.parse(line);
+                            if (data.message && data.message.content) {
+                                finalResponse += data.message.content;
+                                enqueueChars(data.message.content);
+                            }
+                        }
+                    }
+                }
+
+                doneStreaming = true;
+                if (!isTyping) {
+                    assistantDiv.classList.remove('blinking-cursor');
+                }
+
+                // Save full assistant response to history
+                conversationHistory.push({ role: 'assistant', content: finalResponse });
+
+            } catch (error) {
+                console.error('Error fetching from Ollama:', error);
+                assistantDiv.classList.remove('typing-dots', 'blinking-cursor');
+
+                // If it's a TypeError, it's highly likely Cloudflare Access blocked the CORS redirect with a 302 to the login page
+                if (error.name === 'TypeError') {
+                    // Calculate center position for popup
+                    const w = 450;
+                    const h = 600;
+                    const left = (screen.width / 2) - (w / 2);
+                    const top = (screen.height / 2) - (h / 2);
+
+                    assistantDiv.innerHTML = `<span style="color: yellow">Cloudflare Access blocked the connection!</span><br>Wait, checking authentication window...`;
+
+                    // Open popup for login
+                    const loginWindow = window.open('https://ollama.nairdrie.com/', 'CloudflareLogin', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+
+                    // Poll window state
+                    const authInterval = setInterval(() => {
+                        // User closed the window!
+                        if (loginWindow && loginWindow.closed) {
+                            clearInterval(authInterval);
+                            assistantDiv.innerHTML = `<span style="color: #0f0">Authentication window closed!</span> Please send your message again.`;
+                            sendBtn.disabled = false;
+                        }
+                    }, 500);
+
+                    // Prevent finally block from re-enabling the button too early
+                    return;
+
+                } else {
+                    assistantDiv.textContent = "Error connecting to local Ollama. Did you set OLLAMA_ORIGINS=\"*\"?";
+                }
+            } finally {
+                sendBtn.disabled = false;
+                promptInput.focus();
+            }
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // 90s Background Cycler & Space Invaders Logic
+        const innerChat = document.getElementById('inner-chat');
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const backgrounds = [
+            "url('https://web.archive.org/web/19961219003053im_/http://www.pepsi.com/images/greenmesh.gif')",
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Ccircle cx='10' cy='10' r='1' fill='white'/%3E%3Ccircle cx='35' cy='25' r='1.5' fill='yellow'/%3E%3Ccircle cx='20' cy='40' r='1' fill='cyan'/%3E%3Ccircle cx='45' cy='5' r='0.5' fill='white'/%3E%3C/svg%3E\")",
+            "url('https://web.archive.org/web/20210831100437im_/https://www.spacejam.com/1996/img/bg_stars.gif')",
+            "url('https://web.archive.org/web/19961229153014im_/http://www2.windows95.com/gifs/back/sky_tile.gif')"
+        ];
+        let bgIndex = 0;
+        let isPlaying = false;
+
+        // Game State
+        let player = { x: 0, y: 0, width: 80, height: 40, speed: 7 };
+        let bullets = [];
+        let enemyBullets = [];
+        let invaders = [];
+        let gameActive = false;
+        let invaderDirection = 1;
+        let invaderSpeed = 2;
+
+        const playerImg = new Image();
+        playerImg.src = 'assets/player.png';
+
+        const invaderImgs = [new Image(), new Image(), new Image()];
+        invaderImgs[0].src = 'assets/red.png';
+        invaderImgs[1].src = 'assets/yellow.png';
+        invaderImgs[2].src = 'assets/green.png';
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            player.y = canvas.height - 50;
+            if (!player.x) player.x = canvas.width / 2 - player.width / 2;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function initInvaders() {
+            invaders = [];
+            enemyBullets = [];
+            invaderDirection = 1;
+            const cols = 8;
+            const rows = 4;
+            const invaderWidth = 60;
+            const invaderHeight = 40;
+            const spacingX = 80;
+            const spacingY = 60;
+
+            // Center the grid
+            const gridWidth = (cols - 1) * spacingX + invaderWidth;
+            const startX = (canvas.width - gridWidth) / 2;
+
+            for (let r = 0; r < rows; r++) {
+                const img = invaderImgs[r % invaderImgs.length];
+                for (let c = 0; c < cols; c++) {
+                    invaders.push({
+                        x: startX + c * spacingX,
+                        y: r * spacingY + 50,
+                        width: invaderWidth,
+                        height: invaderHeight,
+                        alive: true,
+                        img: img
+                    });
+                }
+            }
+        }
+
+        const keys = { ArrowLeft: false, ArrowRight: false, a: false, d: false };
+
+        function updateGame() {
+            if (!gameActive) return;
+
+            // Player movement
+            if (keys.ArrowLeft || keys.a) player.x -= player.speed;
+            if (keys.ArrowRight || keys.d) player.x += player.speed;
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            // Bullets
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= 7;
+                if (bullets[i].y < 0) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+
+                // Collision
+                for (let inv of invaders) {
+                    if (inv.alive &&
+                        bullets[i].x < inv.x + inv.width &&
+                        bullets[i].x + 4 > inv.x &&
+                        bullets[i].y < inv.y + inv.height &&
+                        bullets[i].y + 10 > inv.y) {
+                        inv.alive = false;
+                        bullets.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+
+            // Enemy Bullets
+            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                enemyBullets[i].y += 5;
+                if (enemyBullets[i].y > canvas.height) {
+                    enemyBullets.splice(i, 1);
+                    continue;
+                }
+
+                // Collision with player
+                if (gameActive &&
+                    enemyBullets[i].x < player.x + player.width &&
+                    enemyBullets[i].x + 4 > player.x &&
+                    enemyBullets[i].y < player.y + player.height &&
+                    enemyBullets[i].y + 10 > player.y) {
+                    gameActive = false;
+                    setTimeout(() => {
+                        alert("GAME OVER! You were hit!");
+                        stopGame();
+                    }, 50);
+                    return;
+                }
+            }
+
+            // Invaders movement
+            let hitEdge = false;
+            let aliveCount = 0;
+            for (let inv of invaders) {
+                if (!inv.alive) continue;
+                aliveCount++;
+                inv.x += invaderSpeed * invaderDirection;
+                if (inv.x + inv.width > canvas.width || inv.x < 0) hitEdge = true;
+
+                // Random shooting
+                if (Math.random() < 0.005) {
+                    enemyBullets.push({ x: inv.x + inv.width / 2 - 2, y: inv.y + inv.height });
+                }
+            }
+
+            if (hitEdge) {
+                invaderDirection *= -1;
+                for (let inv of invaders) {
+                    if (inv.alive) inv.y += 30;
+                }
+            }
+
+            if (aliveCount === 0) {
+                gameActive = false;
+                setTimeout(() => {
+                    alert("YOU WIN! 90s RULES!");
+                    stopGame();
+                }, 50);
+                return;
+            }
+
+            // Draw
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (playerImg.complete) {
+                ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+            } else {
+                ctx.fillStyle = '#0f0';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
+
+            ctx.fillStyle = '#ff0';
+            for (let b of bullets) {
+                ctx.fillRect(b.x, b.y, 4, 10);
+            }
+
+            ctx.fillStyle = '#f00';
+            for (let b of enemyBullets) {
+                ctx.fillRect(b.x, b.y, 4, 10);
+            }
+
+            for (let inv of invaders) {
+                if (inv.alive) {
+                    if (inv.img && inv.img.complete) {
+                        ctx.drawImage(inv.img, inv.x, inv.y, inv.width, inv.height);
+                    } else {
+                        ctx.fillStyle = '#f0f';
+                        ctx.fillRect(inv.x, inv.y, inv.width, inv.height);
+                    }
+                }
+            }
+
+            requestAnimationFrame(updateGame);
+        }
+
+        function startGame() {
+            if (gameActive) return;
+            gameActive = true;
+            innerChat.classList.add('transparent');
+            canvas.style.opacity = '1';
+            initInvaders();
+            updateGame();
+        }
+
+        function stopGame() {
+            gameActive = false;
+            innerChat.classList.remove('transparent');
+            canvas.style.opacity = '0';
+        }
+
+        // Global key handler
+        document.addEventListener('keydown', (e) => {
+            // Background cycler
+            if (e.key.toLowerCase() === 'b' && document.activeElement !== promptInput) {
+                bgIndex = (bgIndex + 1) % backgrounds.length;
+                document.body.style.backgroundImage = backgrounds[bgIndex];
+                return;
+            }
+
+            // Game mechanics
+            if (document.activeElement !== promptInput) {
+                if (['ArrowLeft', 'ArrowRight', 'a', 'd', 'ArrowUp', 'ArrowDown', 'w', 's'].includes(e.key)) {
+                    if (!gameActive) startGame();
+                    keys[e.key] = true;
+                }
+                if (e.key === ' ' && gameActive) {
+                    e.preventDefault(); // prevent scroll
+                    bullets.push({ x: player.x + player.width / 2 - 2, y: player.y });
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        });
+
+        // Click outside chatbox to start, inside to stop
+        document.addEventListener('click', (e) => {
+            if (innerChat.contains(e.target)) {
+                stopGame();
+            } else {
+                startGame();
+            }
+        });
+
+    </script>
+</body>
+
+</html>
