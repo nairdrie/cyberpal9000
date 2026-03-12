@@ -580,55 +580,50 @@
                 console.error('Error fetching from Ollama:', error);
                 assistantDiv.classList.remove('typing-dots', 'blinking-cursor');
 
-                // If it's a TypeError, it's highly likely Cloudflare Access blocked the CORS redirect with a 302 to the login page
-                if (error.name === 'TypeError') {
-                    // Type out the error message like a 90s terminal
-                    const authMessage = "ACCESS DENIED...\nWait, checking authentication window...";
+                // Type out the error message like a 90s terminal
+                const authMessage = "ACCESS DENIED...\nWait, checking authentication window...";
 
-                    // Reset streaming state for the error message
-                    streamStarted = false;
-                    charQueue = [];
-                    isTyping = false;
-                    displayedResponse = '';
-                    assistantDiv.textContent = '';
-                    // Need to reset the flexbox behavior from typing dots
-                    assistantDiv.classList.remove('typing-dots');
+                // Reset streaming state for the error message
+                streamStarted = false;
+                charQueue = [];
+                isTyping = false;
+                displayedResponse = '';
+                assistantDiv.textContent = '';
+                // Need to reset the flexbox behavior from typing dots
+                assistantDiv.classList.remove('typing-dots');
 
-                    enqueueChars(authMessage, () => {
-                        // This callback fires once the text finishes typing
+                enqueueChars(authMessage, () => {
+                    // This callback fires once the text finishes typing
 
-                        // Calculate center position for popup
-                        const w = 450;
-                        const h = 600;
-                        const left = (screen.width / 2) - (w / 2);
-                        const top = (screen.height / 2) - (h / 2);
+                    // Calculate center position for popup
+                    const w = 450;
+                    const h = 600;
+                    const left = (screen.width / 2) - (w / 2);
+                    const top = (screen.height / 2) - (h / 2);
 
-                        // Turn "ACCESS DENIED" red to match the aesthetic after typing finishes
-                        assistantDiv.innerHTML = `<span style="color: red; font-weight: bold;">ACCESS DENIED...</span><br>Wait, checking authentication window...`;
-                        assistantDiv.classList.remove('blinking-cursor');
+                    // Turn "ACCESS DENIED" red to match the aesthetic after typing finishes
+                    assistantDiv.innerHTML = `<span style="color: red; font-weight: bold;">ACCESS DENIED...</span><br>Wait, checking authentication window...`;
+                    assistantDiv.classList.remove('blinking-cursor');
 
-                        // Open popup for login
-                        const loginWindow = window.open('https://ollama.nairdrie.com/', 'CloudflareLogin', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
+                    // Open popup for login
+                    const loginWindow = window.open('https://ollama.nairdrie.com/', 'CloudflareLogin', `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`);
 
-                        // Poll window state
-                        const authInterval = setInterval(() => {
-                            // User closed the window!
-                            if (loginWindow && loginWindow.closed) {
-                                clearInterval(authInterval);
-                                assistantDiv.innerHTML = `<span style="color: #0f0">Authentication window closed.</span> Please send your message again.`;
-                                sendBtn.disabled = false;
+                    // Poll window state
+                    const authInterval = setInterval(() => {
+                        // User closed the window!
+                        if (loginWindow && loginWindow.closed) {
+                            clearInterval(authInterval);
+                            assistantDiv.innerHTML = `<span style="color: #0f0">Authentication window closed.</span> Please send your message again.`;
+                            sendBtn.disabled = false;
 
-                                fetchModels();
-                            }
-                        }, 500);
-                    });
+                            fetchModels();
+                        }
+                    }, 500);
+                });
 
-                    // Prevent finally block from re-enabling the button too early
-                    return;
+                // Prevent finally block from re-enabling the button too early
+                return;
 
-                } else {
-                    assistantDiv.textContent = "Error connecting to local Ollama. Did you set OLLAMA_ORIGINS=\"*\"?";
-                }
             } finally {
                 sendBtn.disabled = false;
                 promptInput.focus();
